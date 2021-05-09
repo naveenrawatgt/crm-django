@@ -1,0 +1,1 @@
+console.log("CRM Django Project")

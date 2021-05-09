@@ -7,9 +7,10 @@ from django.contrib.auth.forms import (
     AuthenticationForm
 )
 from django.contrib.auth import get_user_model, password_validation
+from django.db.models import query
 from django.forms import widgets
 
-from .models import Lead
+from .models import Lead, Agent
 
 User = get_user_model()
 
@@ -29,6 +30,7 @@ class LeadModelForm(forms.ModelForm):
             'last_name',
             'age',
             'agent',
+            'category'
         )
 
         widgets = {
@@ -53,6 +55,11 @@ class LeadModelForm(forms.ModelForm):
             'agent': forms.Select(
                 attrs={
                     'placeholder': 'Agent',
+                    'class': "w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
+                }
+            ),
+            'category': forms.Select(
+                attrs={
                     'class': "w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
                 }
             )
@@ -86,7 +93,7 @@ class CustomAgentCreationForm(UserCreationForm):
         widgets = {
             'username': forms.TextInput(
                 attrs={
-                    'placeholder': '@Username',
+                    'placeholder': '@Username   ',
                     'class': "w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
                 }
             )
@@ -139,3 +146,12 @@ class UserClassForm(AuthenticationForm):
             'class': "w-full bg-white rounded border border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out"
         }),
     )
+
+class AssignAgentForm(forms.Form):
+    agent = forms.ModelChoiceField(queryset=Agent.objects.none())
+
+    def __init__(self, *args, **kwargs):
+        request = kwargs.pop("request")
+        agents = Agent.objects.filter(organisation=request.user.userprofile)
+        super(AssignAgentForm, self).__init__(*args, **kwargs)
+        self.fields["agent"].queryset = agents
